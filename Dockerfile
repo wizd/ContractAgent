@@ -14,7 +14,11 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 # 复制项目文件
-COPY . .
+COPY src ./src
+COPY public ./public
+COPY next.config.js ./
+COPY tsconfig.json ./
+COPY .env.local ./
 
 # 构建应用
 RUN pnpm build
@@ -29,7 +33,7 @@ COPY --from=base /app/package.json /app/pnpm-lock.yaml ./
 COPY --from=base /app/.next ./.next
 COPY --from=base /app/public ./public
 COPY --from=base /app/node_modules ./node_modules
-COPY --from=base /app/.env.local ./.env.local
+COPY --from=base --chown=node:node /app/.env.local ./.env.local
 
 # 设置环境变量
 ENV NODE_ENV=production

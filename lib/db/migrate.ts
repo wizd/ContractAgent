@@ -34,6 +34,15 @@ const runMigrate = async () => {
     throw new Error('POSTGRES_URL is not defined');
   }
 
+  // 打印数据库连接信息（不包含密码）
+  const dbUrl = new URL(process.env.POSTGRES_URL);
+  console.log('Database connection info:', {
+    host: dbUrl.hostname,
+    port: dbUrl.port,
+    database: dbUrl.pathname.replace('/', ''),
+    user: dbUrl.username,
+  });
+
   const connection = postgres(process.env.POSTGRES_URL, { max: 1 });
   const db = drizzle(connection);
 
