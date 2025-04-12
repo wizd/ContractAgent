@@ -17,7 +17,20 @@ services:
       - BLOB_READ_WRITE_TOKEN=${BLOB_READ_WRITE_TOKEN}
     depends_on:
       - db
+      - init
     restart: unless-stopped
+
+  init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: pnpm db:migrate
+    environment:
+      - NODE_ENV=production
+      - POSTGRES_URL=postgresql://postgres:mysecretpassword@db:5432/postgres
+    depends_on:
+      - db
+    restart: "no"
 
   db:
     image: postgres:16-alpine
