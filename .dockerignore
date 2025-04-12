@@ -3,7 +3,6 @@
 .next
 node_modules
 .env
-.env.local
 .env.*
 *.log
 README.md

@@ -14,11 +14,20 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 # 复制项目文件
-COPY src ./src
+COPY app ./app
 COPY public ./public
-COPY next.config.js ./
+COPY next.config.ts ./
 COPY tsconfig.json ./
-COPY .env.local ./
+COPY components ./components
+COPY lib ./lib
+COPY hooks ./hooks
+COPY middleware.ts ./
+COPY next-env.d.ts ./
+COPY postcss.config.mjs ./
+COPY tailwind.config.ts ./
+COPY drizzle.config.ts ./
+COPY components.json ./
+COPY biome.jsonc ./
 
 # 构建应用
 RUN pnpm build
@@ -33,7 +42,6 @@ COPY --from=base /app/package.json /app/pnpm-lock.yaml ./
 COPY --from=base /app/.next ./.next
 COPY --from=base /app/public ./public
 COPY --from=base /app/node_modules ./node_modules
-COPY --from=base --chown=node:node /app/.env.local ./.env.local
 
 # 设置环境变量
 ENV NODE_ENV=production
