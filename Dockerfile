@@ -28,7 +28,7 @@ COPY tailwind.config.ts ./
 COPY drizzle.config.ts ./
 COPY components.json ./
 COPY biome.jsonc ./
-
+COPY .env.local ./
 # 构建应用
 RUN pnpm build
 
