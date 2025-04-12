@@ -29,6 +29,7 @@ COPY --from=base /app/package.json /app/pnpm-lock.yaml ./
 COPY --from=base /app/.next ./.next
 COPY --from=base /app/public ./public
 COPY --from=base /app/node_modules ./node_modules
+COPY --from=base /app/.env.local ./.env.local
 
 # 设置环境变量
 ENV NODE_ENV=production

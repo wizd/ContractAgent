@@ -10,14 +10,14 @@ const envPath = path.resolve(currentDir, '../../.env.local');
 
 console.log('Loading environment variables from:', envPath);
 
-// 尝试加载环境变量
+// 尝试加载环境变量，但不强制覆盖已存在的环境变量
 const result = config({
   path: envPath,
-  override: true, // 强制覆盖已存在的环境变量
+  override: false, // 不覆盖已存在的环境变量
 });
 
 if (result.error) {
-  console.error('Error loading .env.local:', result.error);
+  console.log('Note: .env.local not found, using environment variables instead');
 } else {
   console.log('Environment variables loaded successfully');
 }
