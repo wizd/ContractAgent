@@ -145,7 +145,7 @@ export async function getChatsByUserId({
       hasMore,
     };
   } catch (error) {
-    console.error('Failed to get chats by user from database');
+    console.error(`Failed to get chats by user from database: ${error}`);
     throw error;
   }
 }

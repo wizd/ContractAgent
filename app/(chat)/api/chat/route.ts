@@ -2,6 +2,7 @@ import {
   UIMessage,
   appendResponseMessages,
   createDataStreamResponse,
+  experimental_createMCPClient,
   smoothStream,
   streamText,
 } from 'ai';
@@ -25,10 +26,15 @@ import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
 import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
+import { experimental_createMCPClient as createMCPClient } from 'ai';
 
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
+  let mcpClientsToClose: Awaited<
+    ReturnType<typeof experimental_createMCPClient>
+  >[] = [];
+
   try {
     const {
       id,
@@ -80,32 +86,49 @@ export async function POST(request: Request) {
     });
 
     return createDataStreamResponse({
-      execute: (dataStream) => {
+      execute: async (dataStream) => {
+        const mcpClient = await createMCPClient({
+          transport: {
+            type: 'sse',
+            url: process.env.ESIGN_MCP_SERVER_URL || '',
+
+            // optional: configure HTTP headers, e.g. for authentication
+            headers: {
+              Authorization: process.env.ESIGN_MCP_SERVER_TOKEN || '',
+            },
+          },
+        });
+        mcpClientsToClose.push(mcpClient);
+        const mcpTools = await mcpClient.tools();
+        const tools = {
+          ...mcpTools,
+          //getWeather,
+          createDocument: createDocument({ session, dataStream }),
+          updateDocument: updateDocument({ session, dataStream }),
+          requestSuggestions: requestSuggestions({
+            session,
+            dataStream,
+          }),
+        };
+        console.log('combined tools is ', tools);
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
           system: systemPrompt({ selectedChatModel }),
           messages,
           maxSteps: 5,
-          experimental_activeTools:
-            selectedChatModel === 'chat-model-reasoning'
-              ? []
-              : [
-                  'getWeather',
-                  'createDocument',
-                  'updateDocument',
-                  'requestSuggestions',
-                ],
+          // experimental_activeTools:
+          //   selectedChatModel === 'chat-model-reasoning'
+          //     ? []
+          //     : [
+          //         ...Object.keys(mcpTools),
+          //         'getWeather',
+          //         'createDocument',
+          //         'updateDocument',
+          //         'requestSuggestions',
+          //       ],
           experimental_transform: smoothStream({ chunking: 'word' }),
           experimental_generateMessageId: generateUUID,
-          tools: {
-            getWeather,
-            createDocument: createDocument({ session, dataStream }),
-            updateDocument: updateDocument({ session, dataStream }),
-            requestSuggestions: requestSuggestions({
-              session,
-              dataStream,
-            }),
-          },
+          tools,
           onFinish: async ({ response }) => {
             if (session.user?.id) {
               try {
@@ -141,6 +164,21 @@ export async function POST(request: Request) {
                 console.error('Failed to save chat');
               }
             }
+
+            console.log(
+              `Closing ${mcpClientsToClose.length} MCP clients in onFinish...`,
+            );
+            for (const client of mcpClientsToClose) {
+              try {
+                await client.close();
+              } catch (closeError: unknown) {
+                console.error(
+                  'Error closing MCP client in onFinish:',
+                  closeError,
+                );
+              }
+            }
+            mcpClientsToClose = [];
           },
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,
