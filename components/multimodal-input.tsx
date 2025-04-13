@@ -143,7 +143,7 @@ function PureMultimodalInput({
         if (markdown) {
           append({
             role: 'user',
-            content: `把下面包裹在三个反引号之内的内容创建为文档，不要翻译，不要修改，保持一字不差的原始内容，不要添加任何解释：\n\n\`\`\`\n${markdown}\n\`\`\``,
+            content: `使用以下内容创建文档：\n\n\`\`\`\n${markdown}\n\`\`\``,
           });
           return null;
         }
