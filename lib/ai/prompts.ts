@@ -31,8 +31,9 @@ This is a guide for using artifacts tools: \`createDocument\` and \`updateDocume
 Do not update document right after creating it. Wait for user feedback or request to update it.
 `;
 
+//   'You are a friendly assistant! Keep your responses concise and helpful. Always respond in 中文。';
 export const regularPrompt =
-  'You are a friendly assistant! Keep your responses concise and helpful. Always respond in 中文。';
+  '你是一个友好的助手！保持你的回答简洁有用。始终使用中文回复。';
 
 export const systemPrompt = ({
   selectedChatModel,
