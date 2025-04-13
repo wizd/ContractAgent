@@ -143,21 +143,26 @@ function PureMultimodalInput({
         if (markdown) {
           append({
             role: 'user',
-            content: `把下面的内容创建为文档：\n\n${markdown}`,
+            content: `把下面包裹在三个反引号之内的内容创建为文档，不要翻译，不要修改，保持一字不差的原始内容，不要添加任何解释：\n\n\`\`\`\n${markdown}\n\`\`\``,
           });
+          return null;
         }
-        return {
+        
+        const attachment: Attachment = {
           url,
           name: pathname,
-          contentType: contentType,
-          markdown: markdown,
+          contentType,
         };
+        
+        return attachment;
       }
       const { error } = await response.json();
       toast.error(error);
     } catch (error) {
       toast.error('Failed to upload file, please try again!');
     }
+    
+    return null;
   };
 
   const handleFileChange = useCallback(
@@ -170,7 +175,8 @@ function PureMultimodalInput({
         const uploadPromises = files.map((file) => uploadFile(file));
         const uploadedAttachments = await Promise.all(uploadPromises);
         const successfullyUploadedAttachments = uploadedAttachments.filter(
-          (attachment) => attachment !== undefined,
+          (attachment): attachment is Attachment =>
+            attachment !== null && attachment !== undefined,
         );
 
         setAttachments((currentAttachments) => [
@@ -183,7 +189,7 @@ function PureMultimodalInput({
         setUploadQueue([]);
       }
     },
-    [setAttachments],
+    [setAttachments, append],
   );
 
   return (
