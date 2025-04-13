@@ -154,7 +154,8 @@ export async function POST(request: Request) {
           sendReasoning: true,
         });
       },
-      onError: () => {
+      onError: (error) => {
+        console.error('Stream error:', error);
         return 'Oops, an error occurred!';
       },
     });

@@ -51,7 +51,8 @@ export function Chat({
     onFinish: () => {
       mutate(unstable_serialize(getChatHistoryPaginationKey));
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Chat error:', error);
       toast.error('An error occurred, please try again!');
     },
   });
