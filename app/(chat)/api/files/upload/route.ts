@@ -5,6 +5,11 @@ import { z } from 'zod';
 
 import { auth } from '@/app/(auth)/auth';
 
+// 扩展PutBlobResult类型
+interface ExtendedPutBlobResult extends PutBlobResult {
+  markdown?: string;
+}
+
 // 定义允许的文件类型
 const ALLOWED_EXTENSIONS = {
   // 图片类型
@@ -23,6 +28,7 @@ const ALLOWED_EXTENSIONS = {
   ods: 'application/vnd.oasis.opendocument.spreadsheet',
   odp: 'application/vnd.oasis.opendocument.presentation',
   txt: 'text/plain',
+  md: 'text/markdown',
 };
 
 // 判断文件是否为文档类型
@@ -31,6 +37,11 @@ const isDocument = (fileType: string): boolean => {
     (type) => type !== 'image/jpeg' && type !== 'image/png',
   );
   return documentTypes.includes(fileType);
+};
+
+// 判断文件是否为纯文本或markdown
+const isTextFile = (fileType: string): boolean => {
+  return fileType === 'text/plain' || fileType === 'text/markdown';
 };
 
 // Use Blob instead of File since File is not available in Node.js environment
@@ -81,9 +92,10 @@ export async function POST(request: Request) {
 
     // 处理文档转换或直接上传
     let uploadResult: PutBlobResult;
+    let markdownContent: string | undefined;
 
-    if (isDocument(file.type)) {
-      // 检查是否为文档类型
+    if (isDocument(file.type) && !isTextFile(file.type)) {
+      // 检查是否为需要转换的文档类型（非纯文本）
       try {
         // 使用Web服务处理文档转换为markdown
         const convertFormData = new FormData();
@@ -123,11 +135,14 @@ export async function POST(request: Request) {
           markdownText = responseData;
         }
 
+        // 保存markdown内容用于响应
+        markdownContent = markdownText;
+
         // 保存markdown文本而不是原始文件
         const markdownFilename = `${filename.split('.')[0]}.md`;
         uploadResult = await put(markdownFilename, markdownText, {
           access: 'public',
-          contentType: 'text',
+          contentType: 'text/markdown',
         });
       } catch (convertError) {
         console.error('Error converting document to markdown:', convertError);
@@ -136,14 +151,30 @@ export async function POST(request: Request) {
           { status: 500 },
         );
       }
+    } else if (isTextFile(file.type)) {
+      // 如果是纯文本或markdown文件，直接读取内容
+      const decoder = new TextDecoder();
+      markdownContent = decoder.decode(uint8Array);
+
+      // 直接保存原始文件
+      uploadResult = await put(`${filename}`, fileBuffer, {
+        access: 'public',
+        contentType: file.type,
+      });
     } else {
-      // 如果不是文档类型（如图片），则直接保存原始文件
+      // 如果是其他类型（如图片），则直接保存原始文件
       uploadResult = await put(`${filename}`, fileBuffer, {
         access: 'public',
       });
     }
 
-    return NextResponse.json(uploadResult);
+    // 创建扩展的响应对象
+    const extendedResult: ExtendedPutBlobResult = {
+      ...uploadResult,
+      ...(markdownContent && { markdown: markdownContent }),
+    };
+
+    return NextResponse.json(extendedResult);
   } catch (error) {
     console.error('Failed to process request:', error);
     return NextResponse.json(

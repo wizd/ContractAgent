@@ -138,12 +138,19 @@ function PureMultimodalInput({
 
       if (response.ok) {
         const data = await response.json();
-        const { url, pathname, contentType } = data;
+        const { url, pathname, contentType, markdown } = data;
 
+        if (markdown) {
+          append({
+            role: 'user',
+            content: `把下面的内容创建为文档：\n\n${markdown}`,
+          });
+        }
         return {
           url,
           name: pathname,
           contentType: contentType,
+          markdown: markdown,
         };
       }
       const { error } = await response.json();
