@@ -11,7 +11,7 @@ interface UpdateDocumentProps {
 
 export const updateDocument = ({ session, dataStream }: UpdateDocumentProps) =>
   tool({
-    description: 'Update a document with the given description.',
+    description: '使用给定的描述更新文档。',
     parameters: z.object({
       id: z.string().describe('The ID of the document to update'),
       description: z

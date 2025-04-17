@@ -15,7 +15,8 @@ interface CreateDocumentProps {
 export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
   tool({
     description:
-      'Create a document for a writing or content creation activities. This tool will call other functions that will generate the contents of the document based on the title and kind.',
+      '为写作或内容创作活动创建文档。此工具将调用其他函数，根据标题和类型生成文档内容。',
+    //'Create a document for a writing or content creation activities. This tool will call other functions that will generate the contents of the document based on the title and kind.',
     parameters: z.object({
       title: z.string(),
       kind: z.enum(artifactKinds),

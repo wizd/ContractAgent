@@ -29,6 +29,8 @@ This is a guide for using artifacts tools: \`createDocument\` and \`updateDocume
 - Immediately after creating a document
 
 Do not update document right after creating it. Wait for user feedback or request to update it.
+
+Always respond in 中文.
 `;
 
 //   'You are a friendly assistant! Keep your responses concise and helpful. Always respond in 中文。';
